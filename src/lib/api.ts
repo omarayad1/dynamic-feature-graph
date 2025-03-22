@@ -45,6 +45,25 @@ export interface StrategyConfig {
   lastUpdated: string;
 }
 
+export interface WalletData {
+  balance: number;
+  available: number;
+  locked: number;
+  profitLoss: number;
+  profitLossPercentage: number;
+  lastUpdated: string;
+}
+
+export interface MarketDataPoint {
+  timestamp: number;
+  value: number;
+  volume?: number;
+  open?: number;
+  high?: number;
+  low?: number;
+  close?: number;
+}
+
 export const fetchFeatures = async (): Promise<FeatureData> => {
   try {
     const response = await fetch('/api/features');
@@ -218,9 +237,108 @@ export const generateMockStrategyConfig = (): StrategyConfig => {
   };
 };
 
-export const formatTimestamp = (timestamp: string): string => {
+export const generateMockWalletData = async (): Promise<WalletData> => {
+  const balance = 10000 + Math.random() * 5000;
+  const locked = balance * 0.2;
+  const available = balance - locked;
+  const profitLoss = (Math.random() > 0.5 ? 1 : -1) * Math.random() * 500;
+  const profitLossPercentage = (profitLoss / balance) * 100;
+  
+  return {
+    balance,
+    available,
+    locked,
+    profitLoss,
+    profitLossPercentage,
+    lastUpdated: new Date().toISOString()
+  };
+};
+
+export const generateMockMarketData = async (): Promise<MarketDataPoint[]> => {
+  const data: MarketDataPoint[] = [];
+  const now = Date.now();
+  const basePrice = 350 + Math.random() * 50;
+  const hourMs = 60 * 60 * 1000;
+  const dayMs = 24 * hourMs;
+  
+  // Generate hourly data for 7 days (168 data points)
+  for (let i = 168; i >= 0; i--) {
+    // Add some randomness but maintain a trend
+    const randomFactor = Math.sin(i / 15) * 0.4 + Math.random() * 0.2 - 0.1;
+    const timestamp = now - (i * hourMs);
+    const value = basePrice * (1 + randomFactor);
+    const volume = Math.abs(50000 * randomFactor) + 10000 + Math.random() * 20000;
+    
+    data.push({
+      timestamp,
+      value,
+      volume,
+      open: value * (1 - 0.01 * Math.random()),
+      high: value * (1 + 0.02 * Math.random()),
+      low: value * (1 - 0.02 * Math.random()),
+      close: value,
+    });
+  }
+  
+  return data;
+};
+
+export const fetchWalletData = async (): Promise<WalletData> => {
+  const response = await fetch('/api/wallet');
+  if (!response.ok) {
+    throw new Error(`Failed to fetch wallet data: ${response.statusText}`);
+  }
+  return response.json();
+};
+
+export const fetchMarketData = async (): Promise<MarketDataPoint[]> => {
+  const response = await fetch('/api/market');
+  if (!response.ok) {
+    throw new Error(`Failed to fetch market data: ${response.statusText}`);
+  }
+  return response.json();
+};
+
+export const updateStrategyConfig = async (updatedConfig: StrategyConfig): Promise<StrategyConfig> => {
+  try {
+    const response = await fetch('/api/strategy', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedConfig),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to update strategy: ${response.statusText}`);
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error('Error updating strategy:', error);
+    
+    // For demo purposes, return the updated config with a new timestamp
+    return {
+      ...updatedConfig,
+      lastUpdated: new Date().toISOString()
+    };
+  }
+};
+
+export const formatTimestamp = (timestamp: number, timeframe: string = '1d'): string => {
   const date = new Date(timestamp);
-  return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
+  
+  switch (timeframe) {
+    case '1h':
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    case '1d':
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    case '1w':
+    case '1m':
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    default:
+      return date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+  }
 };
 
 export const formatDate = (timestamp: string): string => {

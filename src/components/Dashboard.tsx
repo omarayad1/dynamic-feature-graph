@@ -5,16 +5,21 @@ import {
   fetchFeatures, generateMockFeatureData, FeatureData,
   fetchPosition, generateMockPositionData,
   fetchOrders, generateMockOrdersData,
-  fetchStrategyConfig, generateMockStrategyConfig
+  fetchStrategyConfig, generateMockStrategyConfig,
+  fetchMarketData, generateMockMarketData,
 } from "@/lib/api";
 import FeatureCard from "./FeatureCard";
 import PositionPanel from "./PositionPanel";
 import OrdersPanel from "./OrdersPanel";
 import StrategyPanel from "./StrategyPanel";
+import WalletInfo from "./WalletInfo";
+import EnhancedMarketChart from "./EnhancedMarketChart";
 import { toast } from "sonner";
-import { RefreshCw, Activity } from "lucide-react";
+import { RefreshCw, Activity, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 // The interval to fetch new data (in milliseconds)
 const REFRESH_INTERVAL = 10000;
@@ -73,6 +78,18 @@ const Dashboard: React.FC = () => {
     refetchOnWindowFocus: false,
   });
 
+  // Query for fetching market data
+  const {
+    data: marketData,
+    isLoading: isLoadingMarket,
+    refetch: refetchMarket
+  } = useQuery({
+    queryKey: ['market'],
+    queryFn: useMockData ? generateMockMarketData : fetchMarketData,
+    refetchInterval: REFRESH_INTERVAL,
+    refetchOnWindowFocus: false,
+  });
+
   // Handle manual refresh
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -80,7 +97,8 @@ const Dashboard: React.FC = () => {
       refetchFeatures(),
       refetchPosition(),
       refetchOrders(),
-      refetchStrategy()
+      refetchStrategy(),
+      refetchMarket()
     ]);
     setIsRefreshing(false);
     toast.success("Data refreshed");
@@ -115,28 +133,27 @@ const Dashboard: React.FC = () => {
       {/* Dashboard Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0 pb-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tight">Trading Bot Dashboard</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Trading Dashboard</h1>
           <p className="text-muted-foreground">
             Real-time monitoring of your trading bot metrics and performance.
           </p>
         </div>
         <div className="flex items-center space-x-3">
-          <button
+          <Button
             onClick={handleRefresh}
             disabled={isLoadingFeatures || isRefreshing}
             className={cn(
               "flex items-center space-x-2 px-4 py-2 rounded-md transition-all",
-              "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-              "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
               (isLoadingFeatures || isRefreshing) && "opacity-70 cursor-not-allowed"
             )}
+            variant="outline"
           >
             <RefreshCw size={16} className={cn(
               "transition-transform",
               isRefreshing && "animate-spin"
             )} />
             <span>Refresh</span>
-          </button>
+          </Button>
           <div className="flex items-center space-x-2 bg-muted px-3 py-1.5 rounded-md text-sm">
             <Activity size={14} className={cn(
               "text-primary",
@@ -169,61 +186,72 @@ const Dashboard: React.FC = () => {
           <p className="text-muted-foreground mb-4">
             {featureError instanceof Error ? featureError.message : "An unknown error occurred"}
           </p>
-          <button
+          <Button
             onClick={() => refetchFeatures()}
-            className="px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            variant="destructive"
           >
             Try Again
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Main Dashboard Layout */}
       {featureData && (
-        <ResizablePanelGroup direction="vertical" className="min-h-[85vh] rounded-lg border">
-          {/* Trading Metrics Section */}
-          <ResizablePanel defaultSize={40} minSize={25}>
-            <div className="p-6">
-              <h2 className="text-lg font-medium mb-4">Trading Metrics</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {features.map(({ title, data }, index) => (
-                  <FeatureCard
-                    key={title}
-                    title={title}
-                    data={data}
-                    index={index}
-                  />
-                ))}
-              </div>
-            </div>
-          </ResizablePanel>
+        <div className="space-y-6">
+          {/* Wallet Information */}
+          <WalletInfo useMockData={useMockData} index={0} />
+            
+          {/* Market Chart */}
+          {marketData && (
+            <EnhancedMarketChart 
+              title="Market Overview" 
+              data={marketData} 
+              height={400} 
+            />
+          )}
           
-          <ResizableHandle withHandle />
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-medium">Trading Metrics</h2>
+            <Link to="/strategy">
+              <Button variant="link" className="text-primary">
+                <span>Strategy Settings</span>
+                <ExternalLink className="ml-1 h-3 w-3" />
+              </Button>
+            </Link>
+          </div>
           
-          {/* Trading Information Section */}
-          <ResizablePanel defaultSize={60}>
-            <div className="p-6">
-              <h2 className="text-lg font-medium mb-4">Trading Information</h2>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <PositionPanel 
-                  position={positionData} 
-                  loading={isLoadingPosition}
-                  index={0}
-                />
-                <OrdersPanel 
-                  orders={ordersData || []} 
-                  loading={isLoadingOrders}
-                  index={1}
-                />
-                <StrategyPanel 
-                  strategy={strategyData} 
-                  loading={isLoadingStrategy}
-                  index={2}
-                />
-              </div>
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+          {/* Trading Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map(({ title, data }, index) => (
+              <FeatureCard
+                key={title}
+                title={title}
+                data={data}
+                index={index}
+              />
+            ))}
+          </div>
+          
+          {/* Trading Information */}
+          <h2 className="text-lg font-medium mt-8 mb-4">Trading Information</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <PositionPanel 
+              position={positionData} 
+              loading={isLoadingPosition}
+              index={0}
+            />
+            <OrdersPanel 
+              orders={ordersData || []} 
+              loading={isLoadingOrders}
+              index={1}
+            />
+            <StrategyPanel 
+              strategy={strategyData} 
+              loading={isLoadingStrategy}
+              index={2}
+            />
+          </div>
+        </div>
       )}
 
       {/* Status Footer */}
