@@ -10,7 +10,7 @@ const Index: React.FC = () => {
       </main>
       <footer className="container mx-auto p-4 text-center text-sm text-muted-foreground">
         <p>
-          Feature Metrics Dashboard
+          Trading Bot Dashboard
         </p>
       </footer>
     </div>

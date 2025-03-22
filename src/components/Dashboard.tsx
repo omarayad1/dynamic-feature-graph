@@ -1,11 +1,20 @@
 
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchFeatures, generateMockFeatureData, FeatureData } from "@/lib/api";
+import { 
+  fetchFeatures, generateMockFeatureData, FeatureData,
+  fetchPosition, generateMockPositionData,
+  fetchOrders, generateMockOrdersData,
+  fetchStrategyConfig, generateMockStrategyConfig
+} from "@/lib/api";
 import FeatureCard from "./FeatureCard";
+import PositionPanel from "./PositionPanel";
+import OrdersPanel from "./OrdersPanel";
+import StrategyPanel from "./StrategyPanel";
 import { toast } from "sonner";
 import { RefreshCw, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 // The interval to fetch new data (in milliseconds)
 const REFRESH_INTERVAL = 10000;
@@ -15,9 +24,51 @@ const Dashboard: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Query for fetching feature data
-  const { data, isLoading, error, isError, refetch } = useQuery({
+  const { 
+    data: featureData, 
+    isLoading: isLoadingFeatures, 
+    error: featureError, 
+    isError: isFeatureError, 
+    refetch: refetchFeatures 
+  } = useQuery({
     queryKey: ['features'],
     queryFn: useMockData ? generateMockFeatureData : fetchFeatures,
+    refetchInterval: REFRESH_INTERVAL,
+    refetchOnWindowFocus: false,
+  });
+
+  // Query for fetching position data
+  const { 
+    data: positionData, 
+    isLoading: isLoadingPosition,
+    refetch: refetchPosition
+  } = useQuery({
+    queryKey: ['position'],
+    queryFn: useMockData ? generateMockPositionData : fetchPosition,
+    refetchInterval: REFRESH_INTERVAL,
+    refetchOnWindowFocus: false,
+  });
+
+  // Query for fetching orders data
+  const { 
+    data: ordersData, 
+    isLoading: isLoadingOrders,
+    refetch: refetchOrders
+  } = useQuery({
+    queryKey: ['orders'],
+    queryFn: useMockData ? generateMockOrdersData : fetchOrders,
+    refetchInterval: REFRESH_INTERVAL,
+    refetchOnWindowFocus: false,
+  });
+
+  // Query for fetching strategy config
+  const { 
+    data: strategyData, 
+    isLoading: isLoadingStrategy,
+    refetch: refetchStrategy
+  } = useQuery({
+    queryKey: ['strategy'],
+    queryFn: useMockData ? generateMockStrategyConfig : fetchStrategyConfig,
     refetchInterval: REFRESH_INTERVAL,
     refetchOnWindowFocus: false,
   });
@@ -25,7 +76,12 @@ const Dashboard: React.FC = () => {
   // Handle manual refresh
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await refetch();
+    await Promise.all([
+      refetchFeatures(),
+      refetchPosition(),
+      refetchOrders(),
+      refetchStrategy()
+    ]);
     setIsRefreshing(false);
     toast.success("Data refreshed");
   };
@@ -48,8 +104,8 @@ const Dashboard: React.FC = () => {
     }
   }, [useMockData]);
 
-  // Transform data to array for easier rendering
-  const features = data ? Object.entries(data).map(([key, value]) => ({
+  // Transform feature data to array for easier rendering
+  const features = featureData ? Object.entries(featureData).map(([key, value]) => ({
     title: key,
     data: value
   })) : [];
@@ -59,20 +115,20 @@ const Dashboard: React.FC = () => {
       {/* Dashboard Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0 pb-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tight">Feature Metrics</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Trading Bot Dashboard</h1>
           <p className="text-muted-foreground">
-            Real-time visualization of your system features and performance metrics.
+            Real-time monitoring of your trading bot metrics and performance.
           </p>
         </div>
         <div className="flex items-center space-x-3">
           <button
             onClick={handleRefresh}
-            disabled={isLoading || isRefreshing}
+            disabled={isLoadingFeatures || isRefreshing}
             className={cn(
               "flex items-center space-x-2 px-4 py-2 rounded-md transition-all",
               "bg-secondary text-secondary-foreground hover:bg-secondary/80",
               "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-              (isLoading || isRefreshing) && "opacity-70 cursor-not-allowed"
+              (isLoadingFeatures || isRefreshing) && "opacity-70 cursor-not-allowed"
             )}
           >
             <RefreshCw size={16} className={cn(
@@ -94,7 +150,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Loading State */}
-      {isLoading && !data && (
+      {isLoadingFeatures && !featureData && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array(6).fill(0).map((_, index) => (
             <div 
@@ -107,14 +163,14 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Error State */}
-      {isError && (
+      {isFeatureError && (
         <div className="flex flex-col items-center justify-center p-8 rounded-lg border border-destructive/20 bg-destructive/5 text-center">
           <h3 className="text-xl font-medium text-destructive mb-2">Failed to load data</h3>
           <p className="text-muted-foreground mb-4">
-            {error instanceof Error ? error.message : "An unknown error occurred"}
+            {featureError instanceof Error ? featureError.message : "An unknown error occurred"}
           </p>
           <button
-            onClick={() => refetch()}
+            onClick={() => refetchFeatures()}
             className="px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             Try Again
@@ -122,18 +178,52 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Feature Grid */}
-      {data && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map(({ title, data }, index) => (
-            <FeatureCard
-              key={title}
-              title={title}
-              data={data}
-              index={index}
-            />
-          ))}
-        </div>
+      {/* Main Dashboard Layout */}
+      {featureData && (
+        <ResizablePanelGroup direction="vertical" className="min-h-[85vh] rounded-lg border">
+          {/* Trading Metrics Section */}
+          <ResizablePanel defaultSize={40} minSize={25}>
+            <div className="p-6">
+              <h2 className="text-lg font-medium mb-4">Trading Metrics</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {features.map(({ title, data }, index) => (
+                  <FeatureCard
+                    key={title}
+                    title={title}
+                    data={data}
+                    index={index}
+                  />
+                ))}
+              </div>
+            </div>
+          </ResizablePanel>
+          
+          <ResizableHandle withHandle />
+          
+          {/* Trading Information Section */}
+          <ResizablePanel defaultSize={60}>
+            <div className="p-6">
+              <h2 className="text-lg font-medium mb-4">Trading Information</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <PositionPanel 
+                  position={positionData} 
+                  loading={isLoadingPosition}
+                  index={0}
+                />
+                <OrdersPanel 
+                  orders={ordersData || []} 
+                  loading={isLoadingOrders}
+                  index={1}
+                />
+                <StrategyPanel 
+                  strategy={strategyData} 
+                  loading={isLoadingStrategy}
+                  index={2}
+                />
+              </div>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       )}
 
       {/* Status Footer */}
@@ -144,7 +234,7 @@ const Dashboard: React.FC = () => {
         <span>
           {useMockData 
             ? "Using simulated data" 
-            : "Connected to /api/features"}
+            : "Connected to API endpoints"}
         </span>
       </div>
     </div>
