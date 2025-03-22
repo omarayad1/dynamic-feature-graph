@@ -12,7 +12,6 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { getStaggeredAnimation } from "@/lib/animations";
 import { motion } from "framer-motion";
 
 interface OrdersPanelProps {
@@ -22,6 +21,16 @@ interface OrdersPanelProps {
 }
 
 const OrdersPanel: React.FC<OrdersPanelProps> = ({ orders, loading, index }) => {
+  const variants = {
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
+    transition: {
+      duration: 0.4,
+      ease: [0.4, 0, 0.2, 1],
+      delay: index * 0.05,
+    }
+  };
+
   if (loading) {
     return (
       <Card className="h-[350px] animate-pulse">
@@ -40,7 +49,11 @@ const OrdersPanel: React.FC<OrdersPanelProps> = ({ orders, loading, index }) => 
   }
 
   return (
-    <motion.div {...getStaggeredAnimation(index)}>
+    <motion.div
+      initial={variants.initial}
+      animate={variants.animate}
+      transition={variants.transition}
+    >
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-xl">Recent Orders</CardTitle>

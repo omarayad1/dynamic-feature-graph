@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Position } from "@/lib/api";
 import { ArrowDown, ArrowUp, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getStaggeredAnimation } from "@/lib/animations";
 import { motion } from "framer-motion";
 import { formatDate } from "@/lib/api";
 
@@ -15,6 +14,16 @@ interface PositionPanelProps {
 }
 
 const PositionPanel: React.FC<PositionPanelProps> = ({ position, loading, index }) => {
+  const variants = {
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
+    transition: {
+      duration: 0.4,
+      ease: [0.4, 0, 0.2, 1],
+      delay: index * 0.05,
+    }
+  };
+
   if (loading) {
     return (
       <Card className="h-[240px] animate-pulse">
@@ -51,7 +60,11 @@ const PositionPanel: React.FC<PositionPanelProps> = ({ position, loading, index 
   const isProfitable = position.pnl > 0;
 
   return (
-    <motion.div {...getStaggeredAnimation(index)}>
+    <motion.div
+      initial={variants.initial}
+      animate={variants.animate}
+      transition={variants.transition}
+    >
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-xl">Current Position</CardTitle>

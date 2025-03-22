@@ -1,7 +1,7 @@
 
 export const ANIMATION_DURATION = 500; // in milliseconds
 
-// Staggered animation for multiple items
+// Staggered animation for multiple items - NOT USED ANYMORE, REPLACED WITH INLINE ANIMATION
 export const getStaggeredAnimation = (index: number, baseDelay: number = 50) => {
   return {
     initial: { opacity: 0, y: 10 },

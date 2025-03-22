@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { StrategyConfig, formatDate } from "@/lib/api";
 import { Settings, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getStaggeredAnimation } from "@/lib/animations";
 import { motion } from "framer-motion";
 import { Separator } from "@/components/ui/separator";
 
@@ -15,6 +14,16 @@ interface StrategyPanelProps {
 }
 
 const StrategyPanel: React.FC<StrategyPanelProps> = ({ strategy, loading, index }) => {
+  const variants = {
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
+    transition: {
+      duration: 0.4,
+      ease: [0.4, 0, 0.2, 1],
+      delay: index * 0.05,
+    }
+  };
+
   if (loading) {
     return (
       <Card className="h-[350px] animate-pulse">
@@ -50,7 +59,11 @@ const StrategyPanel: React.FC<StrategyPanelProps> = ({ strategy, loading, index 
   }
 
   return (
-    <motion.div {...getStaggeredAnimation(index)}>
+    <motion.div
+      initial={variants.initial}
+      animate={variants.animate}
+      transition={variants.transition}
+    >
       <Card>
         <CardHeader className="pb-2">
           <div className="flex justify-between items-center">
