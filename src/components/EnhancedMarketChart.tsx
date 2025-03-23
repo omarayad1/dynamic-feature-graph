@@ -1,11 +1,6 @@
 
 import React, { useState } from "react";
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent
-} from "@/components/ui/chart";
-import {
   Area,
   AreaChart,
   Bar,
@@ -22,8 +17,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { BarChart3, LineChart as LineChartIcon, Layers } from "lucide-react";
+import { BarChart3, LineChart as LineChartIcon, Layers, BarChartHorizontalIcon } from "lucide-react";
 import { formatTimestamp, formatValue } from "@/lib/api";
+import ChartDialog from "./ChartDialog";
 
 const timeRanges = [
   { label: "1H", value: "1h" },
@@ -48,6 +44,7 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
 }) => {
   const [chartType, setChartType] = useState<"line" | "area" | "bar">(type === "candlestick" ? "bar" : type);
   const [timeRange, setTimeRange] = useState<string>("1d");
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   // Filter data based on timeRange (mock implementation)
   const filteredData = data;
@@ -69,6 +66,10 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
     if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
     if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
     return `$${value}`;
+  };
+
+  const handleChartClick = () => {
+    setDialogOpen(true);
   };
 
   // Function to render the appropriate chart based on type
@@ -308,64 +309,88 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-2">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
-          <CardTitle className="text-xl">{title}</CardTitle>
-          <div className="flex space-x-2">
-            <div className="bg-secondary/50 rounded-md p-0.5">
-              <Button
-                variant={chartType === "line" ? "secondary" : "ghost"}
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setChartType("line")}
-              >
-                <LineChartIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={chartType === "area" ? "secondary" : "ghost"}
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setChartType("area")}
-              >
-                <Layers className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={chartType === "bar" ? "secondary" : "ghost"}
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setChartType("bar")}
-              >
-                <BarChart3 className="h-4 w-4" />
-              </Button>
+    <>
+      <Card className="w-full cursor-pointer group" onClick={handleChartClick}>
+        <CardHeader className="pb-2">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
+            <CardTitle className="text-xl">{title}</CardTitle>
+            <div className="flex space-x-2">
+              <div className="bg-secondary/50 rounded-md p-0.5">
+                <Button
+                  variant={chartType === "line" ? "secondary" : "ghost"}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setChartType("line")
+                  }}
+                >
+                  <LineChartIcon className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={chartType === "area" ? "secondary" : "ghost"}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setChartType("area")
+                  }}
+                >
+                  <Layers className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={chartType === "bar" ? "secondary" : "ghost"}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setChartType("bar")
+                  }}
+                >
+                  <BarChart3 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <div className="flex justify-end mt-2">
-          <div className="flex bg-secondary/50 rounded-md p-0.5">
-            {timeRanges.map(range => (
-              <Button
-                key={range.value}
-                variant={timeRange === range.value ? "secondary" : "ghost"}
-                size="sm"
-                className="h-7 text-xs px-2"
-                onClick={() => setTimeRange(range.value)}
-              >
-                {range.label}
-              </Button>
-            ))}
+          
+          <div className="flex justify-end mt-2">
+            <div className="flex bg-secondary/50 rounded-md p-0.5">
+              {timeRanges.map(range => (
+                <Button
+                  key={range.value}
+                  variant={timeRange === range.value ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-7 text-xs px-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setTimeRange(range.value)
+                  }}
+                >
+                  {range.label}
+                </Button>
+              ))}
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div style={{ height: height }}>
-          <div className="h-full">
-            {renderChart()}
+        </CardHeader>
+        <CardContent>
+          <div style={{ height: height }} className="relative">
+            <div className="absolute right-2 top-2 p-1 bg-background/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+              <BarChartHorizontalIcon className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div className="h-full">
+              {renderChart()}
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <ChartDialog 
+        open={dialogOpen} 
+        onOpenChange={setDialogOpen} 
+        data={data.map(item => ({ timestamp: item.timestamp, value: item.value }))} 
+        title={title}
+      />
+    </>
   );
 };
 
