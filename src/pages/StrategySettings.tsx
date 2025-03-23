@@ -277,7 +277,7 @@ const StrategySettings: React.FC = () => {
                         </div>
                         <FormControl>
                           <Switch
-                            checked={field.value}
+                            checked={field.value as boolean}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
@@ -306,8 +306,12 @@ const StrategySettings: React.FC = () => {
                                 <FormControl>
                                   <Input
                                     type="number"
-                                    {...field}
                                     onChange={e => field.onChange(parseFloat(e.target.value))}
+                                    onBlur={field.onBlur}
+                                    value={typeof field.value === 'number' ? field.value : 0}
+                                    disabled={field.disabled}
+                                    name={field.name}
+                                    ref={field.ref}
                                     min={param.min}
                                     max={param.max}
                                     step={param.step || 0.01}
@@ -344,7 +348,7 @@ const StrategySettings: React.FC = () => {
                                 </div>
                                 <FormControl>
                                   <Switch
-                                    checked={field.value}
+                                    checked={field.value as boolean}
                                     onCheckedChange={field.onChange}
                                   />
                                 </FormControl>
@@ -364,7 +368,14 @@ const StrategySettings: React.FC = () => {
                                   {key.replace(/([A-Z])/g, ' $1').trim()}
                                 </FormLabel>
                                 <FormControl>
-                                  <Input {...field} />
+                                  <Input
+                                    value={field.value as string}
+                                    onChange={field.onChange}
+                                    onBlur={field.onBlur}
+                                    disabled={field.disabled}
+                                    name={field.name}
+                                    ref={field.ref}
+                                  />
                                 </FormControl>
                                 <FormDescription>
                                   {param.description}

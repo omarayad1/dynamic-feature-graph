@@ -157,7 +157,7 @@ const StatisticalAnalysis: React.FC<StatisticalAnalysisProps> = ({ data, title }
                     <XAxis dataKey="range" angle={-45} textAnchor="end" height={70} />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value) => [`${value} occurrences`, 'Frequency']}
+                      formatter={(value: number) => [`${value} occurrences`, 'Frequency']}
                       labelFormatter={(label) => `Range: ${label}`}
                     />
                     <Bar dataKey="count" fill="var(--primary)" radius={[4, 4, 0, 0]} />
@@ -187,7 +187,7 @@ const StatisticalAnalysis: React.FC<StatisticalAnalysisProps> = ({ data, title }
                     <XAxis dataKey="range" angle={-45} textAnchor="end" height={70} />
                     <YAxis domain={[0, 100]} label={{ value: 'Percent (%)', angle: -90, position: 'insideLeft' }} />
                     <Tooltip 
-                      formatter={(value) => [`${value.toFixed(1)}%`, 'Cumulative %']}
+                      formatter={(value: number) => [`${value.toFixed(1)}%`, 'Cumulative %']}
                       labelFormatter={(label) => `Range: ${label}`}
                     />
                     <Area type="monotone" dataKey="cumulative" stroke="var(--primary)" fillOpacity={1} fill="url(#colorCumulative)" />
@@ -253,22 +253,16 @@ const StatisticalAnalysis: React.FC<StatisticalAnalysisProps> = ({ data, title }
                     <XAxis dataKey="timestamp" />
                     <YAxis domain={['auto', 'auto']} />
                     <Tooltip 
-                      formatter={(value) => [`${value.toFixed(2)}%`, 'Change']}
+                      formatter={(value: number) => [`${value.toFixed(2)}%`, 'Change']}
                     />
-                    <Bar 
-                      dataKey="percentChange" 
-                      fill="var(--primary)" 
-                      radius={[4, 4, 0, 0]}
-                      name="% Change"
-                    >
-                      {
-                        percentageChangeData.map((entry, index) => (
-                          <Bar 
-                            key={`cell-${index}`} 
-                            fill={entry.percentChange >= 0 ? "var(--primary)" : "var(--destructive)"}
-                          />
-                        ))
-                      }
+                    <Bar dataKey="percentChange" fill="var(--primary)" radius={[4, 4, 0, 0]} name="% Change">
+                      {percentageChangeData.map((entry, index) => (
+                        <Bar 
+                          key={`cell-${index}`} 
+                          dataKey="percentChange"
+                          fill={entry.percentChange >= 0 ? "var(--primary)" : "var(--destructive)"}
+                        />
+                      ))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
