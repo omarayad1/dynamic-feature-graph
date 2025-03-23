@@ -1,11 +1,4 @@
-
 import React, { useState, useRef, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   LineChart,
   Line,
@@ -27,12 +20,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatTimestamp, formatValue } from "@/lib/api";
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
 import {
   ZoomIn,
   ZoomOut,
@@ -49,7 +36,6 @@ import {
   RotateCcw,
   Maximize,
   Minimize,
-  BarChartHorizontalIcon,
 } from "lucide-react";
 import StatisticalAnalysis from "./StatisticalAnalysis";
 
@@ -70,16 +56,14 @@ interface Annotation {
   color: string;
 }
 
-interface AdvancedChartViewProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+export interface AdvancedChartViewProps {
   data: Array<{ timestamp: string | number; value: number; [key: string]: any }>;
   title: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
-  open,
-  onOpenChange,
   data,
   title,
 }) => {
@@ -583,228 +567,223 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="text-xl">{title} Analysis</DialogTitle>
-        </DialogHeader>
+    <div className="w-full h-full flex flex-col">
+      <Tabs defaultValue="chart" className="flex-1 flex flex-col" onValueChange={setActiveTab}>
+        <TabsList className="w-full mx-auto grid grid-cols-2">
+          <TabsTrigger value="chart">Interactive Chart</TabsTrigger>
+          <TabsTrigger value="stats">Statistical Analysis</TabsTrigger>
+        </TabsList>
         
-        <Tabs defaultValue="chart" className="flex-1 flex flex-col" onValueChange={setActiveTab}>
-          <TabsList className="w-full mx-auto grid grid-cols-2">
-            <TabsTrigger value="chart">Interactive Chart</TabsTrigger>
-            <TabsTrigger value="stats">Statistical Analysis</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="chart" className="flex-1 flex flex-col">
-            <div className="flex flex-wrap items-center gap-2 mb-2">
+        <TabsContent value="chart" className="flex-1 flex flex-col">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <div className="bg-secondary/50 rounded-md p-0.5 mr-2">
+              <Button
+                variant={chartType === "line" ? "secondary" : "ghost"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setChartType("line")}
+              >
+                <LineChartIcon className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={chartType === "area" ? "secondary" : "ghost"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setChartType("area")}
+              >
+                <Layers className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={chartType === "bar" ? "secondary" : "ghost"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setChartType("bar")}
+              >
+                <BarChart3 className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="bg-secondary/50 rounded-md p-0.5 mr-2">
+              <Button
+                variant={mode === "view" ? "secondary" : "ghost"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setMode("view")}
+                title="Normal view"
+              >
+                <Maximize className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={mode === "pan" ? "secondary" : "ghost"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setMode("pan")}
+                title="Pan (not implemented)"
+              >
+                <Move className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={mode === "zoom" ? "secondary" : "ghost"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setMode("zoom")}
+                title="Zoom"
+              >
+                <Crosshair className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={mode === "draw" ? "secondary" : "ghost"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setMode("draw")}
+                title="Draw"
+              >
+                <PencilLine className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {mode === "draw" && (
               <div className="bg-secondary/50 rounded-md p-0.5 mr-2">
                 <Button
-                  variant={chartType === "line" ? "secondary" : "ghost"}
+                  variant={drawingType === "trendline" ? "secondary" : "ghost"}
                   size="icon"
                   className="h-8 w-8"
-                  onClick={() => setChartType("line")}
-                >
-                  <LineChartIcon className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={chartType === "area" ? "secondary" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setChartType("area")}
-                >
-                  <Layers className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={chartType === "bar" ? "secondary" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setChartType("bar")}
-                >
-                  <BarChart3 className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <div className="bg-secondary/50 rounded-md p-0.5 mr-2">
-                <Button
-                  variant={mode === "view" ? "secondary" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setMode("view")}
-                  title="Normal view"
-                >
-                  <Maximize className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={mode === "pan" ? "secondary" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setMode("pan")}
-                  title="Pan (not implemented)"
-                >
-                  <Move className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={mode === "zoom" ? "secondary" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setMode("zoom")}
-                  title="Zoom"
-                >
-                  <Crosshair className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={mode === "draw" ? "secondary" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setMode("draw")}
-                  title="Draw"
+                  onClick={() => setDrawingType("trendline")}
+                  title="Trend Line"
                 >
                   <PencilLine className="h-4 w-4" />
                 </Button>
-              </div>
-              
-              {mode === "draw" && (
-                <div className="bg-secondary/50 rounded-md p-0.5 mr-2">
-                  <Button
-                    variant={drawingType === "trendline" ? "secondary" : "ghost"}
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setDrawingType("trendline")}
-                    title="Trend Line"
-                  >
-                    <PencilLine className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={drawingType === "horizontal" ? "secondary" : "ghost"}
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setDrawingType("horizontal")}
-                    title="Horizontal Line"
-                  >
-                    <MinusSquare className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={drawingType === "vertical" ? "secondary" : "ghost"}
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setDrawingType("vertical")}
-                    title="Vertical Line"
-                  >
-                    <Ruler className="h-4 w-4 rotate-90" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={handleClearDrawings}
-                    title="Clear All Lines"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-              
-              <div className="bg-secondary/50 rounded-md p-0.5">
                 <Button
-                  variant="ghost"
+                  variant={drawingType === "horizontal" ? "secondary" : "ghost"}
                   size="icon"
                   className="h-8 w-8"
-                  onClick={handleZoomIn}
-                  title="Zoom In"
+                  onClick={() => setDrawingType("horizontal")}
+                  title="Horizontal Line"
                 >
-                  <ZoomIn className="h-4 w-4" />
+                  <MinusSquare className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={drawingType === "vertical" ? "secondary" : "ghost"}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setDrawingType("vertical")}
+                  title="Vertical Line"
+                >
+                  <Ruler className="h-4 w-4 rotate-90" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8"
-                  onClick={handleZoomOut}
-                  title="Zoom Out"
+                  onClick={handleClearDrawings}
+                  title="Clear All Lines"
                 >
-                  <ZoomOut className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={handleReset}
-                  title="Reset View"
-                >
-                  <RotateCcw className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
+            )}
+            
+            <div className="bg-secondary/50 rounded-md p-0.5">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleZoomIn}
+                title="Zoom In"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleZoomOut}
+                title="Zoom Out"
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleReset}
+                title="Reset View"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
             </div>
-            
-            <Card className="flex-1 relative">
-              <CardContent className="p-2 h-full">
-                <div 
-                  ref={chartRef}
-                  className="relative h-full w-full" 
-                  onMouseDown={handleMouseDown}
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={handleMouseUp}
-                  onMouseLeave={() => {
-                    if (drawing) {
-                      handleMouseUp();
-                    }
-                  }}
-                >
-                  {renderChart()}
-                  
-                  {/* Instruction text when drawing */}
-                  {mode === "draw" && (
-                    <div className="absolute top-4 right-4 bg-card/80 backdrop-blur-sm text-xs p-2 rounded shadow-md border border-border">
-                      {drawingType === "trendline" && "Click and drag to draw a trend line"}
-                      {drawingType === "horizontal" && "Click to add a horizontal line"}
-                      {drawingType === "vertical" && "Click to add a vertical line"}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="mt-2">
-              <CardContent className="p-2">
-                <Slider
-                  defaultValue={[0, 100]}
-                  value={[
-                    (dataRange[0] / (data.length - 1)) * 100,
-                    (dataRange[1] / (data.length - 1)) * 100
-                  ]}
-                  max={100}
-                  step={1}
-                  onValueChange={(newValues) => {
-                    const start = Math.floor((newValues[0] / 100) * (data.length - 1));
-                    const end = Math.floor((newValues[1] / 100) * (data.length - 1));
-                    setDataRange([start, end]);
-                  }}
-                  className="my-2"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{formatTimestamp(
-                    typeof data[0]?.timestamp === 'number' 
-                      ? data[0]?.timestamp as number
-                      : Date.now()
-                  )}</span>
-                  <span>{formatTimestamp(
-                    typeof data[data.length - 1]?.timestamp === 'number' 
-                      ? data[data.length - 1]?.timestamp as number
-                      : Date.now()
-                  )}</span>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          </div>
           
-          <TabsContent value="stats" className="flex-1 overflow-auto pt-2">
-            <ScrollArea className="h-full pr-4">
-              <StatisticalAnalysis data={data} title={title} />
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+          <Card className="flex-1 relative">
+            <CardContent className="p-2 h-full">
+              <div 
+                ref={chartRef}
+                className="relative h-full w-full" 
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={() => {
+                  if (drawing) {
+                    handleMouseUp();
+                  }
+                }}
+              >
+                {renderChart()}
+                
+                {/* Instruction text when drawing */}
+                {mode === "draw" && (
+                  <div className="absolute top-4 right-4 bg-card/80 backdrop-blur-sm text-xs p-2 rounded shadow-md border border-border">
+                    {drawingType === "trendline" && "Click and drag to draw a trend line"}
+                    {drawingType === "horizontal" && "Click to add a horizontal line"}
+                    {drawingType === "vertical" && "Click to add a vertical line"}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="mt-2">
+            <CardContent className="p-2">
+              <Slider
+                defaultValue={[0, 100]}
+                value={[
+                  (dataRange[0] / (data.length - 1)) * 100,
+                  (dataRange[1] / (data.length - 1)) * 100
+                ]}
+                max={100}
+                step={1}
+                onValueChange={(newValues) => {
+                  const start = Math.floor((newValues[0] / 100) * (data.length - 1));
+                  const end = Math.floor((newValues[1] / 100) * (data.length - 1));
+                  setDataRange([start, end]);
+                }}
+                className="my-2"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{formatTimestamp(
+                  typeof data[0]?.timestamp === 'number' 
+                    ? data[0]?.timestamp as number
+                    : Date.now()
+                )}</span>
+                <span>{formatTimestamp(
+                  typeof data[data.length - 1]?.timestamp === 'number' 
+                    ? data[data.length - 1]?.timestamp as number
+                    : Date.now()
+                )}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="stats" className="flex-1 overflow-auto pt-2">
+          <ScrollArea className="h-full pr-4">
+            <StatisticalAnalysis data={data} title={title} />
+          </ScrollArea>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 
 export default AdvancedChartView;
+

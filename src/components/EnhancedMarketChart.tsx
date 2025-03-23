@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Area,
@@ -49,7 +48,6 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
 
   useEffect(() => {
     if (data && data.length > 0) {
-      // Ensure timestamps are numbers for charting
       const processed = data.map(item => ({
         ...item,
         timestamp: typeof item.timestamp === 'string' ? new Date(item.timestamp).getTime() : item.timestamp

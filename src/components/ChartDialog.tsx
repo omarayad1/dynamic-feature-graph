@@ -61,7 +61,12 @@ const ChartDialog: React.FC<ChartDialogProps> = ({
               </Button>
             </DialogHeader>
             <div className="flex-1 h-full">
-              <AdvancedChartView data={normalizedData} title={title} />
+              <AdvancedChartView 
+                data={normalizedData} 
+                title={title} 
+                open={open} 
+                onOpenChange={onOpenChange}
+              />
             </div>
           </DialogContent>
         </Dialog>
