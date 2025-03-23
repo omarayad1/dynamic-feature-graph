@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Area,
@@ -46,10 +45,8 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
   const [timeRange, setTimeRange] = useState<string>("1d");
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Filter data based on timeRange (mock implementation)
   const filteredData = data;
 
-  // Chart config
   const config = {
     price: { 
       theme: { light: "#2563eb", dark: "#3b82f6" },
@@ -61,18 +58,16 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
     }
   };
 
-  // Format Y-axis ticks
   const formatYAxis = (value: number) => {
     if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
     if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
     return `$${value}`;
   };
 
-  const handleChartClick = () => {
+  const handleCardClick = () => {
     setDialogOpen(true);
   };
 
-  // Function to render the appropriate chart based on type
   const renderChart = () => {
     if (chartType === "line") {
       return (
@@ -310,7 +305,7 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
 
   return (
     <>
-      <Card className="w-full cursor-pointer group" onClick={handleChartClick}>
+      <Card className="w-full cursor-pointer group" onClick={handleCardClick}>
         <CardHeader className="pb-2">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
             <CardTitle className="text-xl">{title}</CardTitle>
