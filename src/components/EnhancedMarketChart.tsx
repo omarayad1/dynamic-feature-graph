@@ -92,6 +92,18 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
             axisLine={false}
             width={60}
           />
+          {data[0]?.volume && (
+            <YAxis 
+              yAxisId="right"
+              orientation="right"
+              tickFormatter={formatYAxis}
+              stroke="var(--accent)"
+              tickLine={false}
+              axisLine={false}
+              width={60}
+              opacity={0.7}
+            />
+          )}
           <Tooltip 
             content={({ active, payload, label }) => {
               if (active && payload && payload.length) {
@@ -166,6 +178,18 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
             axisLine={false}
             width={60}
           />
+          {data[0]?.volume && (
+            <YAxis 
+              yAxisId="right"
+              orientation="right"
+              tickFormatter={formatYAxis}
+              stroke="var(--accent)"
+              tickLine={false}
+              axisLine={false}
+              width={60}
+              opacity={0.7}
+            />
+          )}
           <Tooltip 
             content={({ active, payload, label }) => {
               if (active && payload && payload.length) {
@@ -228,6 +252,18 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
             axisLine={false}
             width={60}
           />
+          {data[0]?.volume && (
+            <YAxis 
+              yAxisId="right"
+              orientation="right"
+              tickFormatter={formatYAxis}
+              stroke="var(--accent)"
+              tickLine={false}
+              axisLine={false}
+              width={60}
+              opacity={0.7}
+            />
+          )}
           <Tooltip 
             content={({ active, payload, label }) => {
               if (active && payload && payload.length) {
@@ -324,9 +360,9 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
       </CardHeader>
       <CardContent>
         <div style={{ height: height }}>
-          <ChartContainer className="h-full" config={config}>
+          <div className="h-full">
             {renderChart()}
-          </ChartContainer>
+          </div>
         </div>
       </CardContent>
     </Card>

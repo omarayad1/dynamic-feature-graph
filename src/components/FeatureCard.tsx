@@ -25,7 +25,7 @@ const CustomTooltip = ({ active, payload, label, feature }: any) => {
     const dataPoint = payload[0].payload;
     return (
       <div className="glassmorphism rounded-lg p-2 shadow-sm text-sm animate-fade-in">
-        <p className="font-medium">{formatTimestamp(dataPoint.timestamp)}</p>
+        <p className="font-medium">{formatTimestamp(new Date(dataPoint.timestamp).getTime())}</p>
         <p className="text-primary font-medium">{formatValue(feature, dataPoint.value)}</p>
       </div>
     );
@@ -114,7 +114,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, data, index }) => {
             {formatValue(title, currentValue)}
           </span>
           <span className="text-xs text-muted-foreground">
-            {data.length > 0 && `Updated ${formatTimestamp(data[data.length - 1].timestamp)}`}
+            {data.length > 0 && `Updated ${formatTimestamp(new Date(data[data.length - 1].timestamp).getTime())}`}
           </span>
         </div>
         
