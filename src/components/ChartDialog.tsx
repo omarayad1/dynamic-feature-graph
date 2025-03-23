@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -25,42 +25,71 @@ const ChartDialog: React.FC<ChartDialogProps> = ({
   title,
 }) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [normalizedData, setNormalizedData] = useState<Array<{ timestamp: number; value: number }>>([]);
+  
+  // Ensure data is properly formatted for the charts
+  useEffect(() => {
+    if (data && data.length > 0) {
+      const processed = data.map(item => ({
+        timestamp: typeof item.timestamp === 'string' ? new Date(item.timestamp).getTime() : item.timestamp,
+        value: item.value
+      }));
+      setNormalizedData(processed);
+    }
+  }, [data]);
 
-  if (showAdvanced) {
-    return (
-      <AdvancedChartView 
-        open={open} 
-        onOpenChange={(isOpen) => {
+  // Display different content based on the view mode
+  const renderContent = () => {
+    if (showAdvanced) {
+      return (
+        <Dialog open={open} onOpenChange={(isOpen) => {
           if (!isOpen) {
             setShowAdvanced(false);
           }
           onOpenChange(isOpen);
-        }}
-        data={data} 
-        title={title} 
-      />
-    );
-  }
+        }}>
+          <DialogContent className="max-w-5xl max-h-[90vh] h-[80vh] overflow-hidden">
+            <DialogHeader className="flex flex-row justify-between items-center">
+              <DialogTitle>Advanced Chart: {title}</DialogTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAdvanced(false)}
+                className="flex items-center gap-2"
+              >
+                Standard View
+              </Button>
+            </DialogHeader>
+            <div className="flex-1 h-full">
+              <AdvancedChartView data={normalizedData} title={title} />
+            </div>
+          </DialogContent>
+        </Dialog>
+      );
+    }
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="flex flex-row justify-between items-center">
-          <DialogTitle>Statistical Analysis: {title}</DialogTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowAdvanced(true)}
-            className="flex items-center gap-2"
-          >
-            <BarChartHorizontalIcon className="h-4 w-4" />
-            Advanced View
-          </Button>
-        </DialogHeader>
-        <StatisticalAnalysis data={data} title={title} />
-      </DialogContent>
-    </Dialog>
-  );
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="flex flex-row justify-between items-center">
+            <DialogTitle>Statistical Analysis: {title}</DialogTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAdvanced(true)}
+              className="flex items-center gap-2"
+            >
+              <BarChartHorizontalIcon className="h-4 w-4" />
+              Advanced View
+            </Button>
+          </DialogHeader>
+          <StatisticalAnalysis data={normalizedData} title={title} />
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
+  return renderContent();
 };
 
 export default ChartDialog;

@@ -41,6 +41,18 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, data, index }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const prevDataRef = useRef<FeatureDataPoint[]>([]);
   const cardRef = useRef<HTMLDivElement>(null);
+  const [processedData, setProcessedData] = useState<Array<{timestamp: number; value: number}>>([]);
+
+  useEffect(() => {
+    if (data && data.length > 0) {
+      // Process data to ensure timestamps are numbers for charts
+      const processed = data.map(point => ({
+        ...point,
+        timestamp: typeof point.timestamp === 'string' ? new Date(point.timestamp).getTime() : point.timestamp
+      }));
+      setProcessedData(processed);
+    }
+  }, [data]);
 
   useEffect(() => {
     // Check if data has been updated
@@ -83,6 +95,12 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, data, index }) => {
   // Format Y-axis ticks
   const formatYAxis = (value: number) => {
     return formatValue(title, value);
+  };
+
+  // Format X-axis ticks
+  const formatXAxis = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
   };
 
   return (
@@ -138,7 +156,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, data, index }) => {
             </div>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
-                data={data}
+                data={processedData}
                 margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
               >
                 <defs>
@@ -150,10 +168,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, data, index }) => {
                 <XAxis 
                   dataKey="timestamp"
                   tick={{ fontSize: 10 }}
-                  tickFormatter={(time) => {
-                    const date = new Date(time);
-                    return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
-                  }}
+                  tickFormatter={formatXAxis}
                   axisLine={false}
                   tickLine={false}
                   minTickGap={30}
@@ -191,7 +206,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, data, index }) => {
       <ChartDialog 
         open={dialogOpen} 
         onOpenChange={setDialogOpen} 
-        data={data} 
+        data={processedData} 
         title={title}
       />
     </>

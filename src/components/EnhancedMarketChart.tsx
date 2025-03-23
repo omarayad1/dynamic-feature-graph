@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import {
   Area,
   AreaChart,
@@ -44,8 +45,20 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
   const [chartType, setChartType] = useState<"line" | "area" | "bar">(type === "candlestick" ? "bar" : type);
   const [timeRange, setTimeRange] = useState<string>("1d");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [processedData, setProcessedData] = useState<any[]>([]);
 
-  const filteredData = data;
+  useEffect(() => {
+    if (data && data.length > 0) {
+      // Ensure timestamps are numbers for charting
+      const processed = data.map(item => ({
+        ...item,
+        timestamp: typeof item.timestamp === 'string' ? new Date(item.timestamp).getTime() : item.timestamp
+      }));
+      setProcessedData(processed);
+    }
+  }, [data]);
+
+  const filteredData = processedData;
 
   const config = {
     price: { 
@@ -64,18 +77,49 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
     return `$${value}`;
   };
 
+  const formatXAxis = (timestamp: number) => {
+    return formatTimestamp(timestamp, timeRange);
+  };
+
   const handleCardClick = () => {
     setDialogOpen(true);
   };
 
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="glassmorphism rounded-lg p-2 text-sm">
+          <p className="font-medium">{formatTimestamp(label)}</p>
+          <p className="text-primary font-medium">
+            ${Number(payload[0].value).toLocaleString()}
+          </p>
+          {payload[1] && (
+            <p className="text-accent font-medium">
+              Vol: {Number(payload[1].value).toLocaleString()}
+            </p>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
+
   const renderChart = () => {
+    if (filteredData.length === 0) {
+      return (
+        <div className="h-full flex items-center justify-center">
+          <p className="text-muted-foreground">No data available</p>
+        </div>
+      );
+    }
+
     if (chartType === "line") {
       return (
         <LineChart data={filteredData} margin={{ top: 5, right: 20, bottom: 20, left: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
           <XAxis 
             dataKey="timestamp" 
-            tickFormatter={(time) => formatTimestamp(time, timeRange)}
+            tickFormatter={formatXAxis}
             stroke="var(--muted-foreground)"
             tickLine={false}
             axisLine={false}
@@ -88,7 +132,7 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
             axisLine={false}
             width={60}
           />
-          {data[0]?.volume && (
+          {filteredData[0]?.volume && (
             <YAxis 
               yAxisId="right"
               orientation="right"
@@ -100,26 +144,7 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
               opacity={0.7}
             />
           )}
-          <Tooltip 
-            content={({ active, payload, label }) => {
-              if (active && payload && payload.length) {
-                return (
-                  <div className="glassmorphism rounded-lg p-2 text-sm">
-                    <p className="font-medium">{formatTimestamp(label)}</p>
-                    <p className="text-primary font-medium">
-                      ${Number(payload[0].value).toLocaleString()}
-                    </p>
-                    {payload[1] && (
-                      <p className="text-accent font-medium">
-                        Vol: {Number(payload[1].value).toLocaleString()}
-                      </p>
-                    )}
-                  </div>
-                );
-              }
-              return null;
-            }}
-          />
+          <Tooltip content={<CustomTooltip />} />
           <Line 
             type="monotone" 
             dataKey="value" 
@@ -129,7 +154,7 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
             activeDot={{ r: 5, strokeWidth: 0 }}
             strokeWidth={2}
           />
-          {data[0]?.volume && (
+          {filteredData[0]?.volume && (
             <Line 
               type="monotone" 
               dataKey="volume" 
@@ -151,7 +176,7 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
               <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.4} />
               <stop offset="75%" stopColor="var(--primary)" stopOpacity={0.05} />
             </linearGradient>
-            {data[0]?.volume && (
+            {filteredData[0]?.volume && (
               <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.3} />
                 <stop offset="75%" stopColor="var(--accent)" stopOpacity={0.05} />
@@ -161,7 +186,7 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
           <XAxis 
             dataKey="timestamp" 
-            tickFormatter={(time) => formatTimestamp(time, timeRange)}
+            tickFormatter={formatXAxis}
             stroke="var(--muted-foreground)"
             tickLine={false}
             axisLine={false}
@@ -174,7 +199,7 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
             axisLine={false}
             width={60}
           />
-          {data[0]?.volume && (
+          {filteredData[0]?.volume && (
             <YAxis 
               yAxisId="right"
               orientation="right"
@@ -186,26 +211,7 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
               opacity={0.7}
             />
           )}
-          <Tooltip 
-            content={({ active, payload, label }) => {
-              if (active && payload && payload.length) {
-                return (
-                  <div className="glassmorphism rounded-lg p-2 text-sm">
-                    <p className="font-medium">{formatTimestamp(label)}</p>
-                    <p className="text-primary font-medium">
-                      ${Number(payload[0].value).toLocaleString()}
-                    </p>
-                    {payload[1] && (
-                      <p className="text-accent font-medium">
-                        Vol: {Number(payload[1].value).toLocaleString()}
-                      </p>
-                    )}
-                  </div>
-                );
-              }
-              return null;
-            }}
-          />
+          <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"
             dataKey="value"
@@ -215,7 +221,7 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
             activeDot={{ r: 5, strokeWidth: 0 }}
             strokeWidth={2}
           />
-          {data[0]?.volume && (
+          {filteredData[0]?.volume && (
             <Area
               type="monotone"
               dataKey="volume"
@@ -235,7 +241,7 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
           <XAxis 
             dataKey="timestamp" 
-            tickFormatter={(time) => formatTimestamp(time, timeRange)}
+            tickFormatter={formatXAxis}
             stroke="var(--muted-foreground)"
             tickLine={false}
             axisLine={false}
@@ -248,7 +254,7 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
             axisLine={false}
             width={60}
           />
-          {data[0]?.volume && (
+          {filteredData[0]?.volume && (
             <YAxis 
               yAxisId="right"
               orientation="right"
@@ -260,26 +266,7 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
               opacity={0.7}
             />
           )}
-          <Tooltip 
-            content={({ active, payload, label }) => {
-              if (active && payload && payload.length) {
-                return (
-                  <div className="glassmorphism rounded-lg p-2 text-sm">
-                    <p className="font-medium">{formatTimestamp(label)}</p>
-                    <p className="text-primary font-medium">
-                      ${Number(payload[0].value).toLocaleString()}
-                    </p>
-                    {payload[1] && (
-                      <p className="text-accent font-medium">
-                        Vol: {Number(payload[1].value).toLocaleString()}
-                      </p>
-                    )}
-                  </div>
-                );
-              }
-              return null;
-            }}
-          />
+          <Tooltip content={<CustomTooltip />} />
           <Bar 
             dataKey="value" 
             name="Price"
@@ -287,7 +274,7 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
             radius={[4, 4, 0, 0]}
             barSize={timeRange === '1h' ? 4 : timeRange === '1d' ? 8 : 12}
           />
-          {data[0]?.volume && (
+          {filteredData[0]?.volume && (
             <Bar 
               dataKey="volume" 
               name="Volume"
@@ -382,7 +369,7 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
       <ChartDialog 
         open={dialogOpen} 
         onOpenChange={setDialogOpen} 
-        data={data.map(item => ({ timestamp: item.timestamp, value: item.value }))} 
+        data={processedData.map(item => ({ timestamp: item.timestamp, value: item.value }))} 
         title={title}
       />
     </>
