@@ -71,6 +71,206 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
     return `$${value}`;
   };
 
+  // Function to render the appropriate chart based on type
+  const renderChart = () => {
+    if (chartType === "line") {
+      return (
+        <LineChart data={filteredData} margin={{ top: 5, right: 20, bottom: 20, left: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
+          <XAxis 
+            dataKey="timestamp" 
+            tickFormatter={(time) => formatTimestamp(time, timeRange)}
+            stroke="var(--muted-foreground)"
+            tickLine={false}
+            axisLine={false}
+            minTickGap={30}
+          />
+          <YAxis 
+            tickFormatter={formatYAxis}
+            stroke="var(--muted-foreground)"
+            tickLine={false}
+            axisLine={false}
+            width={60}
+          />
+          <Tooltip 
+            content={({ active, payload, label }) => {
+              if (active && payload && payload.length) {
+                return (
+                  <div className="glassmorphism rounded-lg p-2 text-sm">
+                    <p className="font-medium">{formatTimestamp(label)}</p>
+                    <p className="text-primary font-medium">
+                      ${Number(payload[0].value).toLocaleString()}
+                    </p>
+                    {payload[1] && (
+                      <p className="text-accent font-medium">
+                        Vol: {Number(payload[1].value).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                );
+              }
+              return null;
+            }}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="value" 
+            name="Price"
+            stroke="var(--primary)" 
+            dot={false}
+            activeDot={{ r: 5, strokeWidth: 0 }}
+            strokeWidth={2}
+          />
+          {data[0]?.volume && (
+            <Line 
+              type="monotone" 
+              dataKey="volume" 
+              name="Volume"
+              stroke="var(--accent)" 
+              dot={false}
+              strokeWidth={1.5}
+              opacity={0.7}
+              yAxisId="right"
+            />
+          )}
+        </LineChart>
+      );
+    } else if (chartType === "area") {
+      return (
+        <AreaChart data={filteredData} margin={{ top: 5, right: 20, bottom: 20, left: 0 }}>
+          <defs>
+            <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.4} />
+              <stop offset="75%" stopColor="var(--primary)" stopOpacity={0.05} />
+            </linearGradient>
+            {data[0]?.volume && (
+              <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.3} />
+                <stop offset="75%" stopColor="var(--accent)" stopOpacity={0.05} />
+              </linearGradient>
+            )}
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
+          <XAxis 
+            dataKey="timestamp" 
+            tickFormatter={(time) => formatTimestamp(time, timeRange)}
+            stroke="var(--muted-foreground)"
+            tickLine={false}
+            axisLine={false}
+            minTickGap={30}
+          />
+          <YAxis 
+            tickFormatter={formatYAxis}
+            stroke="var(--muted-foreground)"
+            tickLine={false}
+            axisLine={false}
+            width={60}
+          />
+          <Tooltip 
+            content={({ active, payload, label }) => {
+              if (active && payload && payload.length) {
+                return (
+                  <div className="glassmorphism rounded-lg p-2 text-sm">
+                    <p className="font-medium">{formatTimestamp(label)}</p>
+                    <p className="text-primary font-medium">
+                      ${Number(payload[0].value).toLocaleString()}
+                    </p>
+                    {payload[1] && (
+                      <p className="text-accent font-medium">
+                        Vol: {Number(payload[1].value).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                );
+              }
+              return null;
+            }}
+          />
+          <Area
+            type="monotone"
+            dataKey="value"
+            name="Price"
+            stroke="var(--primary)"
+            fill="url(#colorPrice)"
+            activeDot={{ r: 5, strokeWidth: 0 }}
+            strokeWidth={2}
+          />
+          {data[0]?.volume && (
+            <Area
+              type="monotone"
+              dataKey="volume"
+              name="Volume"
+              stroke="var(--accent)"
+              fill="url(#colorVolume)"
+              strokeWidth={1.5}
+              opacity={0.8}
+              yAxisId="right"
+            />
+          )}
+        </AreaChart>
+      );
+    } else {
+      return (
+        <BarChart data={filteredData} margin={{ top: 5, right: 20, bottom: 20, left: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
+          <XAxis 
+            dataKey="timestamp" 
+            tickFormatter={(time) => formatTimestamp(time, timeRange)}
+            stroke="var(--muted-foreground)"
+            tickLine={false}
+            axisLine={false}
+            minTickGap={30}
+          />
+          <YAxis 
+            tickFormatter={formatYAxis}
+            stroke="var(--muted-foreground)"
+            tickLine={false}
+            axisLine={false}
+            width={60}
+          />
+          <Tooltip 
+            content={({ active, payload, label }) => {
+              if (active && payload && payload.length) {
+                return (
+                  <div className="glassmorphism rounded-lg p-2 text-sm">
+                    <p className="font-medium">{formatTimestamp(label)}</p>
+                    <p className="text-primary font-medium">
+                      ${Number(payload[0].value).toLocaleString()}
+                    </p>
+                    {payload[1] && (
+                      <p className="text-accent font-medium">
+                        Vol: {Number(payload[1].value).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                );
+              }
+              return null;
+            }}
+          />
+          <Bar 
+            dataKey="value" 
+            name="Price"
+            fill="var(--primary)" 
+            radius={[4, 4, 0, 0]}
+            barSize={timeRange === '1h' ? 4 : timeRange === '1d' ? 8 : 12}
+          />
+          {data[0]?.volume && (
+            <Bar 
+              dataKey="volume" 
+              name="Volume"
+              fill="var(--accent)" 
+              radius={[4, 4, 0, 0]}
+              opacity={0.7}
+              barSize={timeRange === '1h' ? 4 : timeRange === '1d' ? 8 : 12}
+              yAxisId="right"
+            />
+          )}
+        </BarChart>
+      );
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
@@ -125,200 +325,7 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
       <CardContent>
         <div style={{ height: height }}>
           <ChartContainer className="h-full" config={config}>
-            {chartType === "line" && (
-              <LineChart data={filteredData} margin={{ top: 5, right: 20, bottom: 20, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
-                <XAxis 
-                  dataKey="timestamp" 
-                  tickFormatter={(time) => formatTimestamp(time, timeRange)}
-                  stroke="var(--muted-foreground)"
-                  tickLine={false}
-                  axisLine={false}
-                  minTickGap={30}
-                />
-                <YAxis 
-                  tickFormatter={formatYAxis}
-                  stroke="var(--muted-foreground)"
-                  tickLine={false}
-                  axisLine={false}
-                  width={60}
-                />
-                <Tooltip 
-                  content={({ active, payload, label }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="glassmorphism rounded-lg p-2 text-sm">
-                          <p className="font-medium">{formatTimestamp(label)}</p>
-                          <p className="text-primary font-medium">
-                            ${Number(payload[0].value).toLocaleString()}
-                          </p>
-                          {payload[1] && (
-                            <p className="text-accent font-medium">
-                              Vol: {Number(payload[1].value).toLocaleString()}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="value" 
-                  name="Price"
-                  stroke="var(--primary)" 
-                  dot={false}
-                  activeDot={{ r: 5, strokeWidth: 0 }}
-                  strokeWidth={2}
-                />
-                {data[0]?.volume && (
-                  <Line 
-                    type="monotone" 
-                    dataKey="volume" 
-                    name="Volume"
-                    stroke="var(--accent)" 
-                    dot={false}
-                    strokeWidth={1.5}
-                    opacity={0.7}
-                    yAxisId="right"
-                  />
-                )}
-              </LineChart>
-            )}
-            
-            {chartType === "area" && (
-              <AreaChart data={filteredData} margin={{ top: 5, right: 20, bottom: 20, left: 0 }}>
-                <defs>
-                  <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.4} />
-                    <stop offset="75%" stopColor="var(--primary)" stopOpacity={0.05} />
-                  </linearGradient>
-                  {data[0]?.volume && (
-                    <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.3} />
-                      <stop offset="75%" stopColor="var(--accent)" stopOpacity={0.05} />
-                    </linearGradient>
-                  )}
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
-                <XAxis 
-                  dataKey="timestamp" 
-                  tickFormatter={(time) => formatTimestamp(time, timeRange)}
-                  stroke="var(--muted-foreground)"
-                  tickLine={false}
-                  axisLine={false}
-                  minTickGap={30}
-                />
-                <YAxis 
-                  tickFormatter={formatYAxis}
-                  stroke="var(--muted-foreground)"
-                  tickLine={false}
-                  axisLine={false}
-                  width={60}
-                />
-                <Tooltip 
-                  content={({ active, payload, label }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="glassmorphism rounded-lg p-2 text-sm">
-                          <p className="font-medium">{formatTimestamp(label)}</p>
-                          <p className="text-primary font-medium">
-                            ${Number(payload[0].value).toLocaleString()}
-                          </p>
-                          {payload[1] && (
-                            <p className="text-accent font-medium">
-                              Vol: {Number(payload[1].value).toLocaleString()}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  name="Price"
-                  stroke="var(--primary)"
-                  fill="url(#colorPrice)"
-                  activeDot={{ r: 5, strokeWidth: 0 }}
-                  strokeWidth={2}
-                />
-                {data[0]?.volume && (
-                  <Area
-                    type="monotone"
-                    dataKey="volume"
-                    name="Volume"
-                    stroke="var(--accent)"
-                    fill="url(#colorVolume)"
-                    strokeWidth={1.5}
-                    opacity={0.8}
-                    yAxisId="right"
-                  />
-                )}
-              </AreaChart>
-            )}
-            
-            {chartType === "bar" && (
-              <BarChart data={filteredData} margin={{ top: 5, right: 20, bottom: 20, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
-                <XAxis 
-                  dataKey="timestamp" 
-                  tickFormatter={(time) => formatTimestamp(time, timeRange)}
-                  stroke="var(--muted-foreground)"
-                  tickLine={false}
-                  axisLine={false}
-                  minTickGap={30}
-                />
-                <YAxis 
-                  tickFormatter={formatYAxis}
-                  stroke="var(--muted-foreground)"
-                  tickLine={false}
-                  axisLine={false}
-                  width={60}
-                />
-                <Tooltip 
-                  content={({ active, payload, label }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="glassmorphism rounded-lg p-2 text-sm">
-                          <p className="font-medium">{formatTimestamp(label)}</p>
-                          <p className="text-primary font-medium">
-                            ${Number(payload[0].value).toLocaleString()}
-                          </p>
-                          {payload[1] && (
-                            <p className="text-accent font-medium">
-                              Vol: {Number(payload[1].value).toLocaleString()}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Bar 
-                  dataKey="value" 
-                  name="Price"
-                  fill="var(--primary)" 
-                  radius={[4, 4, 0, 0]}
-                  barSize={timeRange === '1h' ? 4 : timeRange === '1d' ? 8 : 12}
-                />
-                {data[0]?.volume && (
-                  <Bar 
-                    dataKey="volume" 
-                    name="Volume"
-                    fill="var(--accent)" 
-                    radius={[4, 4, 0, 0]}
-                    opacity={0.7}
-                    barSize={timeRange === '1h' ? 4 : timeRange === '1d' ? 8 : 12}
-                    yAxisId="right"
-                  />
-                )}
-              </BarChart>
-            )}
+            {renderChart()}
           </ChartContainer>
         </div>
       </CardContent>

@@ -15,6 +15,13 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+// Define types for form values
+type FormValues = {
+  name: string;
+  enabled: boolean;
+  [key: string]: string | number | boolean;
+};
+
 const StrategySettings: React.FC = () => {
   const [useMockData, setUseMockData] = useState(true);
   
@@ -51,7 +58,7 @@ const StrategySettings: React.FC = () => {
   const createFormSchema = (strategy: any) => {
     if (!strategy || !strategy.parameters) return z.object({});
     
-    const schemaFields: Record<string, any> = {};
+    const schemaFields: Record<string, z.ZodTypeAny> = {};
     
     Object.entries(strategy.parameters).forEach(([key, param]: [string, any]) => {
       if (param.type === "number") {
@@ -72,10 +79,11 @@ const StrategySettings: React.FC = () => {
     return z.object(schemaFields);
   };
 
-  const formSchema = createFormSchema(strategy);
+  // Use an explicit type for the form schema
+  const formSchema = React.useMemo(() => createFormSchema(strategy), [strategy]);
   
   // Create form with react-hook-form and zod validation
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: React.useMemo(() => {
       if (!strategy) return {};
@@ -89,7 +97,7 @@ const StrategySettings: React.FC = () => {
         values[key] = param.value;
       });
       
-      return values;
+      return values as FormValues;
     }, [strategy]),
   });
   
@@ -105,13 +113,13 @@ const StrategySettings: React.FC = () => {
         values[key] = param.value;
       });
       
-      form.reset(values);
+      form.reset(values as FormValues);
     }
   }, [strategy, form]);
   
   // Mutation to update strategy
   const updateMutation = useMutation({
-    mutationFn: (data: any) => {
+    mutationFn: (data: FormValues) => {
       // Transform data to match the API format
       const transformedData = {
         ...strategy,
@@ -140,7 +148,7 @@ const StrategySettings: React.FC = () => {
     }
   });
   
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
+  const onSubmit = (data: FormValues) => {
     updateMutation.mutate(data);
   };
   
@@ -289,7 +297,7 @@ const StrategySettings: React.FC = () => {
                           <FormField
                             key={key}
                             control={form.control}
-                            name={key as any}
+                            name={key}
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="capitalize">
@@ -323,7 +331,7 @@ const StrategySettings: React.FC = () => {
                           <FormField
                             key={key}
                             control={form.control}
-                            name={key as any}
+                            name={key}
                             render={({ field }) => (
                               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                                 <div className="space-y-0.5">
@@ -349,7 +357,7 @@ const StrategySettings: React.FC = () => {
                           <FormField
                             key={key}
                             control={form.control}
-                            name={key as any}
+                            name={key}
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="capitalize">

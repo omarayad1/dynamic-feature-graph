@@ -114,7 +114,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, data, index }) => {
             {formatValue(title, currentValue)}
           </span>
           <span className="text-xs text-muted-foreground">
-            Updated {data.length > 0 && formatTimestamp(data[data.length - 1].timestamp)}
+            {data.length > 0 && `Updated ${formatTimestamp(data[data.length - 1].timestamp)}`}
           </span>
         </div>
         
