@@ -15,7 +15,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatValue } from "@/lib/api";
+import { formatValue, formatTimestamp } from "@/lib/api";
 
 interface StatisticalAnalysisProps {
   data: Array<{ timestamp: string | number; value: number }>;
@@ -96,6 +96,14 @@ const StatisticalAnalysis: React.FC<StatisticalAnalysisProps> = ({ data, title }
     };
   });
 
+  // Format functions for tooltips and axis
+  const formatTooltipValue = (value: number | string): string => {
+    if (typeof value === 'number') {
+      return value.toFixed(2);
+    }
+    return String(value);
+  };
+
   return (
     <div className="space-y-4">
       <Card>
@@ -154,8 +162,8 @@ const StatisticalAnalysis: React.FC<StatisticalAnalysisProps> = ({ data, title }
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={distributionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                    <XAxis dataKey="range" angle={-45} textAnchor="end" height={70} />
-                    <YAxis />
+                    <XAxis dataKey="range" angle={-45} textAnchor="end" height={70} interval={0} tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} />
                     <Tooltip 
                       formatter={(value: number) => [`${value} occurrences`, 'Frequency']}
                       labelFormatter={(label) => `Range: ${label}`}
@@ -184,10 +192,15 @@ const StatisticalAnalysis: React.FC<StatisticalAnalysisProps> = ({ data, title }
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                    <XAxis dataKey="range" angle={-45} textAnchor="end" height={70} />
-                    <YAxis domain={[0, 100]} label={{ value: 'Percent (%)', angle: -90, position: 'insideLeft' }} />
+                    <XAxis dataKey="range" angle={-45} textAnchor="end" height={70} interval={0} tick={{ fontSize: 10 }} />
+                    <YAxis
+                      domain={[0, 100]}
+                      label={{ value: 'Percent (%)', angle: -90, position: 'insideLeft' }}
+                      tick={{ fontSize: 10 }}
+                      tickFormatter={(value: number) => `${value}%`}
+                    />
                     <Tooltip 
-                      formatter={(value: number) => [`${value.toFixed(1)}%`, 'Cumulative %']}
+                      formatter={(value: number) => [`${formatTooltipValue(value)}%`, 'Cumulative %']}
                       labelFormatter={(label) => `Range: ${label}`}
                     />
                     <Area type="monotone" dataKey="cumulative" stroke="var(--primary)" fillOpacity={1} fill="url(#colorCumulative)" />
@@ -208,9 +221,21 @@ const StatisticalAnalysis: React.FC<StatisticalAnalysisProps> = ({ data, title }
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                    <XAxis dataKey="timestamp" />
-                    <YAxis domain={['auto', 'auto']} />
-                    <Tooltip />
+                    <XAxis
+                      dataKey="timestamp"
+                      tickFormatter={(timestamp) => formatTimestamp(timestamp)}
+                      tick={{ fontSize: 10 }}
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis
+                      domain={['auto', 'auto']}
+                      tickFormatter={(value) => formatValue(title, value)}
+                      tick={{ fontSize: 10 }}
+                    />
+                    <Tooltip
+                      formatter={(value: number) => [formatValue(title, value), '']}
+                      labelFormatter={(timestamp) => formatTimestamp(timestamp)}
+                    />
                     {movingAverages.map((ma, index) => (
                       <Line 
                         key={ma.period}
@@ -250,12 +275,25 @@ const StatisticalAnalysis: React.FC<StatisticalAnalysisProps> = ({ data, title }
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={percentageChangeData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                    <XAxis dataKey="timestamp" />
-                    <YAxis domain={['auto', 'auto']} />
-                    <Tooltip 
-                      formatter={(value: number) => [`${value.toFixed(2)}%`, 'Change']}
+                    <XAxis
+                      dataKey="timestamp"
+                      tickFormatter={(timestamp) => formatTimestamp(timestamp)}
+                      tick={{ fontSize: 10 }}
+                      interval="preserveStartEnd"
                     />
-                    <Bar dataKey="percentChange" fill="var(--primary)" radius={[4, 4, 0, 0]} name="% Change">
+                    <YAxis
+                      domain={['auto', 'auto']}
+                      tickFormatter={(value: number) => `${value.toFixed(1)}%`}
+                      tick={{ fontSize: 10 }}
+                    />
+                    <Tooltip 
+                      formatter={(value: number) => [`${formatTooltipValue(value)}%`, 'Change']}
+                      labelFormatter={(timestamp) => formatTimestamp(timestamp)}
+                    />
+                    <Bar
+                      dataKey="percentChange"
+                      name="% Change"
+                    >
                       {percentageChangeData.map((entry, index) => (
                         <Bar 
                           key={`cell-${index}`} 

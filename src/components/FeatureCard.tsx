@@ -80,6 +80,11 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, data, index }) => {
     setDialogOpen(true);
   };
 
+  // Format Y-axis ticks
+  const formatYAxis = (value: number) => {
+    return formatValue(title, value);
+  };
+
   return (
     <>
       <Card 
@@ -144,13 +149,24 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, data, index }) => {
                 </defs>
                 <XAxis 
                   dataKey="timestamp"
-                  tick={false}
+                  tick={{ fontSize: 10 }}
+                  tickFormatter={(time) => {
+                    const date = new Date(time);
+                    return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+                  }}
                   axisLine={false}
                   tickLine={false}
+                  minTickGap={30}
+                  interval="preserveStartEnd"
                 />
                 <YAxis 
                   domain={[minValue, maxValue]}
-                  hide
+                  tickFormatter={formatYAxis}
+                  tick={{ fontSize: 10 }}
+                  width={40}
+                  axisLine={false}
+                  tickLine={false}
+                  interval="preserveStartEnd"
                 />
                 <Tooltip
                   content={<CustomTooltip feature={title} />}

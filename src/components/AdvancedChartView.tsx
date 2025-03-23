@@ -193,7 +193,11 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
         id: `v-line-${Date.now()}`,
         index: indexValue,
         value: 0, // not used for vertical lines
-        label: formatTimestamp(visibleData[indexValue - dataRange[0]]?.timestamp || Date.now()),
+        label: formatTimestamp(
+          typeof visibleData[indexValue - dataRange[0]]?.timestamp === 'number' 
+            ? visibleData[indexValue - dataRange[0]]?.timestamp as number
+            : Date.now()
+        ),
         color: "#ff0000"
       }]);
       setDrawing(false);
@@ -252,11 +256,37 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
     }
   };
   
+  // Helper function to safely convert timestamp to number
+  const getNumericTimestamp = (timestamp: string | number): number => {
+    if (typeof timestamp === 'number') return timestamp;
+    if (timestamp && !isNaN(Date.parse(timestamp))) return Date.parse(timestamp);
+    return Date.now();
+  };
+  
+  // Helper function to safely get segment coordinates
+  const getSegmentCoordinates = (startIndex: number, endIndex: number) => {
+    const startItem = visibleData[startIndex - dataRange[0]];
+    const endItem = visibleData[endIndex - dataRange[0]];
+    
+    if (!startItem || !endItem) return null;
+    
+    return [
+      { 
+        x: startItem.timestamp, 
+        y: startItem.value 
+      },
+      { 
+        x: endItem.timestamp, 
+        y: endItem.value 
+      }
+    ];
+  };
+  
   // Render the appropriate chart based on type
   const renderChart = () => {
     const chartProps = {
       data: visibleData,
-      margin: { top: 5, right: 20, bottom: 20, left: 20 }
+      margin: { top: 5, right: 20, bottom: 20, left: 40 }
     };
     
     if (chartType === "line") {
@@ -270,6 +300,7 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
             tickLine={false}
             axisLine={false}
             minTickGap={30}
+            interval="preserveStartEnd"
           />
           <YAxis 
             domain={[valueMin, valueMax]}
@@ -277,6 +308,7 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
             stroke="var(--muted-foreground)"
             tickLine={false}
             axisLine={false}
+            interval="preserveStartEnd"
           />
           <Tooltip 
             content={({ active, payload, label }) => {
@@ -304,18 +336,18 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
           />
           
           {/* Render trend lines */}
-          {refAreas.map(line => (
-            <ReferenceLine 
-              key={line.id}
-              segment={[
-                { x: visibleData[line.startIndex - dataRange[0]]?.timestamp, y: data[line.startIndex]?.value },
-                { x: visibleData[line.endIndex - dataRange[0]]?.timestamp, y: data[line.endIndex]?.value }
-              ]}
-              stroke={line.color}
-              strokeWidth={2}
-              ifOverflow="extendDomain"
-            />
-          ))}
+          {refAreas.map(line => {
+            const segment = getSegmentCoordinates(line.startIndex, line.endIndex);
+            return segment ? (
+              <ReferenceLine 
+                key={line.id}
+                segment={segment}
+                stroke={line.color}
+                strokeWidth={2}
+                ifOverflow="extendDomain"
+              />
+            ) : null;
+          })}
           
           {/* Render horizontal and vertical lines */}
           {refLines.map(line => {
@@ -330,7 +362,8 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
                 />
               );
             } else if (line.id.startsWith('v-line')) {
-              const xValue = visibleData[line.index - dataRange[0]]?.timestamp;
+              const dataPoint = visibleData[line.index - dataRange[0]];
+              const xValue = dataPoint?.timestamp;
               return xValue ? (
                 <ReferenceLine
                   key={line.id}
@@ -347,10 +380,7 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
           {/* Render temp line while drawing */}
           {tempLine && (
             <ReferenceLine 
-              segment={[
-                { x: visibleData[tempLine.startIndex - dataRange[0]]?.timestamp, y: data[tempLine.startIndex]?.value },
-                { x: visibleData[tempLine.endIndex - dataRange[0]]?.timestamp, y: data[tempLine.endIndex]?.value }
-              ]}
+              segment={getSegmentCoordinates(tempLine.startIndex, tempLine.endIndex) || undefined}
               stroke={tempLine.color}
               strokeWidth={2}
               ifOverflow="extendDomain"
@@ -376,6 +406,7 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
             tickLine={false}
             axisLine={false}
             minTickGap={30}
+            interval="preserveStartEnd"
           />
           <YAxis 
             domain={[valueMin, valueMax]}
@@ -383,6 +414,7 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
             stroke="var(--muted-foreground)"
             tickLine={false}
             axisLine={false}
+            interval="preserveStartEnd"
           />
           <Tooltip 
             content={({ active, payload, label }) => {
@@ -410,18 +442,18 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
           />
           
           {/* Render trend lines and annotations (same as line chart) */}
-          {refAreas.map(line => (
-            <ReferenceLine 
-              key={line.id}
-              segment={[
-                { x: visibleData[line.startIndex - dataRange[0]]?.timestamp, y: data[line.startIndex]?.value },
-                { x: visibleData[line.endIndex - dataRange[0]]?.timestamp, y: data[line.endIndex]?.value }
-              ]}
-              stroke={line.color}
-              strokeWidth={2}
-              ifOverflow="extendDomain"
-            />
-          ))}
+          {refAreas.map(line => {
+            const segment = getSegmentCoordinates(line.startIndex, line.endIndex);
+            return segment ? (
+              <ReferenceLine 
+                key={line.id}
+                segment={segment}
+                stroke={line.color}
+                strokeWidth={2}
+                ifOverflow="extendDomain"
+              />
+            ) : null;
+          })}
           
           {refLines.map(line => {
             if (line.id.startsWith('h-line')) {
@@ -435,7 +467,8 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
                 />
               );
             } else if (line.id.startsWith('v-line')) {
-              const xValue = visibleData[line.index - dataRange[0]]?.timestamp;
+              const dataPoint = visibleData[line.index - dataRange[0]];
+              const xValue = dataPoint?.timestamp;
               return xValue ? (
                 <ReferenceLine
                   key={line.id}
@@ -451,10 +484,7 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
           
           {tempLine && (
             <ReferenceLine 
-              segment={[
-                { x: visibleData[tempLine.startIndex - dataRange[0]]?.timestamp, y: data[tempLine.startIndex]?.value },
-                { x: visibleData[tempLine.endIndex - dataRange[0]]?.timestamp, y: data[tempLine.endIndex]?.value }
-              ]}
+              segment={getSegmentCoordinates(tempLine.startIndex, tempLine.endIndex) || undefined}
               stroke={tempLine.color}
               strokeWidth={2}
               ifOverflow="extendDomain"
@@ -474,6 +504,7 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
             tickLine={false}
             axisLine={false}
             minTickGap={30}
+            interval="preserveStartEnd"
           />
           <YAxis 
             domain={[valueMin, valueMax]}
@@ -481,6 +512,7 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
             stroke="var(--muted-foreground)"
             tickLine={false}
             axisLine={false}
+            interval="preserveStartEnd"
           />
           <Tooltip 
             content={({ active, payload, label }) => {
@@ -506,18 +538,18 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
           />
           
           {/* Render trend lines and annotations (same as other charts) */}
-          {refAreas.map(line => (
-            <ReferenceLine 
-              key={line.id}
-              segment={[
-                { x: visibleData[line.startIndex - dataRange[0]]?.timestamp, y: data[line.startIndex]?.value },
-                { x: visibleData[line.endIndex - dataRange[0]]?.timestamp, y: data[line.endIndex]?.value }
-              ]}
-              stroke={line.color}
-              strokeWidth={2}
-              ifOverflow="extendDomain"
-            />
-          ))}
+          {refAreas.map(line => {
+            const segment = getSegmentCoordinates(line.startIndex, line.endIndex);
+            return segment ? (
+              <ReferenceLine 
+                key={line.id}
+                segment={segment}
+                stroke={line.color}
+                strokeWidth={2}
+                ifOverflow="extendDomain"
+              />
+            ) : null;
+          })}
           
           {refLines.map(line => {
             if (line.id.startsWith('h-line')) {
@@ -531,7 +563,8 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
                 />
               );
             } else if (line.id.startsWith('v-line')) {
-              const xValue = visibleData[line.index - dataRange[0]]?.timestamp;
+              const dataPoint = visibleData[line.index - dataRange[0]];
+              const xValue = dataPoint?.timestamp;
               return xValue ? (
                 <ReferenceLine
                   key={line.id}
@@ -748,8 +781,16 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
                   className="my-2"
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{formatTimestamp(data[0]?.timestamp || Date.now())}</span>
-                  <span>{formatTimestamp(data[data.length - 1]?.timestamp || Date.now())}</span>
+                  <span>{formatTimestamp(
+                    typeof data[0]?.timestamp === 'number' 
+                      ? data[0]?.timestamp as number
+                      : Date.now()
+                  )}</span>
+                  <span>{formatTimestamp(
+                    typeof data[data.length - 1]?.timestamp === 'number' 
+                      ? data[data.length - 1]?.timestamp as number
+                      : Date.now()
+                  )}</span>
                 </div>
               </CardContent>
             </Card>
