@@ -1,8 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { BarChartHorizontalIcon } from "lucide-react";
 import ChartDialog from "./ChartDialog";
 import TimeRangeSelector from "./charts/TimeRangeSelector";
@@ -106,9 +104,7 @@ const EnhancedMarketChart: React.FC<EnhancedMarketChartProps> = ({
               <BarChartHorizontalIcon className="h-5 w-5 text-muted-foreground" />
             </div>
             <div className="h-full">
-              <ResponsiveContainer width="100%" height="100%">
-                {renderChart()}
-              </ResponsiveContainer>
+              {renderChart()}
             </div>
           </div>
         </CardContent>

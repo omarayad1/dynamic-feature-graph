@@ -8,6 +8,7 @@ interface ChartTooltipProps {
   label?: number;
 }
 
+// This component is kept for compatibility, but lightweight-charts handles tooltips internally
 const ChartTooltip: React.FC<ChartTooltipProps> = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
