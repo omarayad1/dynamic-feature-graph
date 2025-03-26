@@ -109,20 +109,8 @@ const formatTimestamp = (timestamp: string | number): Time => {
   return Math.floor(date.getTime() / 1000) as Time;
 };
 
-// Fixed addSeriesWithType function
+// Fixed addSeriesWithType function to use the correct API
 export const addSeriesWithType = (chart: IChartApi, type: SeriesType, options: any = {}) => {
-  switch(type) {
-    case 'Line':
-      return chart.addLineSeries(options);
-    case 'Area':
-      return chart.addAreaSeries(options);
-    case 'Bar':
-      return chart.addBarSeries(options);
-    case 'Candlestick':
-      return chart.addCandlestickSeries(options);
-    case 'Histogram':
-      return chart.addHistogramSeries(options);
-    default:
-      throw new Error(`Unsupported series type: ${type}`);
-  }
+  // The `addSeries` method is the correct API method to use
+  return chart.addSeries(type, options);
 };
