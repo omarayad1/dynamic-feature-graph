@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
-import { IChartApi, SeriesType, LineStyle, createChart } from "lightweight-charts";
+import { IChartApi, SeriesType } from "lightweight-charts";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +16,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import StatisticalAnalysis from "./StatisticalAnalysis";
-import { createLightweightChart, formatPriceData, formatVolumeData, getChartColors } from "@/lib/chart-utils";
+import { createLightweightChart, formatPriceData, formatVolumeData, getChartColors, addSeriesWithType } from "@/lib/chart-utils";
 
 export interface AdvancedChartViewProps {
   data: Array<{ timestamp: string | number; value: number; [key: string]: any }>;
@@ -30,7 +30,7 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
   title,
 }) => {
   // Chart state
-  const [chartType, setChartType] = useState<SeriesType>("line");
+  const [chartType, setChartType] = useState<SeriesType>('Line');
   const [dataRange, setDataRange] = useState<number[]>([0, data.length - 1]);
   const [visibleData, setVisibleData] = useState(data);
   const [activeTab, setActiveTab] = useState<string>("chart");
@@ -77,16 +77,16 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
       let mainSeries;
       
       // Add appropriate series based on chart type
-      if (chartType === "line") {
-        mainSeries = chart.addLineSeries({
+      if (chartType === 'Line') {
+        mainSeries = addSeriesWithType(chart, 'Line', {
           color: colors.primary,
           lineWidth: 2,
           crosshairMarkerVisible: true,
           lastValueVisible: true,
           priceLineVisible: true,
         });
-      } else if (chartType === "area") {
-        mainSeries = chart.addAreaSeries({
+      } else if (chartType === 'Area') {
+        mainSeries = addSeriesWithType(chart, 'Area', {
           lineColor: colors.primary,
           topColor: `${colors.primary}40`, // 25% opacity
           bottomColor: `${colors.primary}05`, // 2% opacity
@@ -95,7 +95,7 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
           priceLineVisible: true,
         });
       } else {
-        mainSeries = chart.addHistogramSeries({
+        mainSeries = addSeriesWithType(chart, 'Histogram', {
           color: colors.primary,
           priceFormat: {
             type: 'price',
@@ -109,7 +109,7 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
       
       // Add volume series if available
       if (hasVolume && formattedVolumeData.length > 0) {
-        const volumeSeries = chart.addHistogramSeries({
+        const volumeSeries = addSeriesWithType(chart, 'Histogram', {
           color: colors.accent,
           priceFormat: {
             type: 'volume',
@@ -201,26 +201,26 @@ const AdvancedChartView: React.FC<AdvancedChartViewProps> = ({
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <div className="bg-secondary/50 rounded-md p-0.5 mr-2">
               <Button
-                variant={chartType === "line" ? "secondary" : "ghost"}
+                variant={chartType === 'Line' ? "secondary" : "ghost"}
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => handleChartTypeChange("line")}
+                onClick={() => handleChartTypeChange('Line')}
               >
                 <LineChartIcon className="h-4 w-4" />
               </Button>
               <Button
-                variant={chartType === "area" ? "secondary" : "ghost"}
+                variant={chartType === 'Area' ? "secondary" : "ghost"}
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => handleChartTypeChange("area")}
+                onClick={() => handleChartTypeChange('Area')}
               >
                 <Layers className="h-4 w-4" />
               </Button>
               <Button
-                variant={chartType === "histogram" ? "secondary" : "ghost"}
+                variant={chartType === 'Histogram' ? "secondary" : "ghost"}
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => handleChartTypeChange("histogram")}
+                onClick={() => handleChartTypeChange('Histogram')}
               >
                 <BarChart3 className="h-4 w-4" />
               </Button>

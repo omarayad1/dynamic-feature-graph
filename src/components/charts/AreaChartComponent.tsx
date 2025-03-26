@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect } from "react";
 import { IChartApi } from "lightweight-charts";
-import { createLightweightChart, formatPriceData, formatVolumeData, getChartColors } from "@/lib/chart-utils";
+import { createLightweightChart, formatPriceData, formatVolumeData, getChartColors, addSeriesWithType } from "@/lib/chart-utils";
 
 interface AreaChartComponentProps {
   data: any[];
@@ -37,7 +37,7 @@ const AreaChartComponent: React.FC<AreaChartComponentProps> = ({
       chartRef.current = chart;
       
       // Add area series
-      const areaSeries = chart.addAreaSeries({
+      const areaSeries = addSeriesWithType(chart, 'Area', {
         lineColor: colors.primary,
         topColor: `${colors.primary}40`, // 25% opacity
         bottomColor: `${colors.primary}05`, // 2% opacity
@@ -45,11 +45,12 @@ const AreaChartComponent: React.FC<AreaChartComponentProps> = ({
         lastValueVisible: true,
         priceLineVisible: false,
       });
+      
       areaSeries.setData(formattedPriceData);
       
       // Add volume series if available
       if (hasVolume && formattedVolumeData.length > 0) {
-        const volumeSeries = chart.addHistogramSeries({
+        const volumeSeries = addSeriesWithType(chart, 'Histogram', {
           color: colors.accent,
           priceFormat: {
             type: 'volume',

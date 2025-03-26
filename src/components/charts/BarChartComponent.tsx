@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect } from "react";
 import { IChartApi } from "lightweight-charts";
-import { createLightweightChart, formatPriceData, formatVolumeData, getChartColors } from "@/lib/chart-utils";
+import { createLightweightChart, formatPriceData, formatVolumeData, getChartColors, addSeriesWithType } from "@/lib/chart-utils";
 
 interface BarChartComponentProps {
   data: any[];
@@ -37,7 +37,7 @@ const BarChartComponent: React.FC<BarChartComponentProps> = ({
       chartRef.current = chart;
       
       // Add histogram series for price
-      const barSeries = chart.addHistogramSeries({
+      const barSeries = addSeriesWithType(chart, 'Histogram', {
         color: colors.primary,
         priceFormat: {
           type: 'price',
@@ -45,11 +45,12 @@ const BarChartComponent: React.FC<BarChartComponentProps> = ({
         },
         lastValueVisible: true,
       });
+      
       barSeries.setData(formattedPriceData);
       
       // Add volume series if available
       if (hasVolume && formattedVolumeData.length > 0) {
-        const volumeSeries = chart.addHistogramSeries({
+        const volumeSeries = addSeriesWithType(chart, 'Histogram', {
           color: colors.accent,
           priceFormat: {
             type: 'volume',

@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect } from "react";
-import { IChartApi, LineSeriesOptions, SeriesMarker } from "lightweight-charts";
-import { createLightweightChart, formatPriceData, formatVolumeData, getChartColors } from "@/lib/chart-utils";
+import { IChartApi, SeriesType } from "lightweight-charts";
+import { createLightweightChart, formatPriceData, formatVolumeData, getChartColors, addSeriesWithType } from "@/lib/chart-utils";
 
 interface LineChartComponentProps {
   data: any[];
@@ -36,19 +36,20 @@ const LineChartComponent: React.FC<LineChartComponentProps> = ({
       });
       chartRef.current = chart;
       
-      // Add price series
-      const lineSeries = chart.addLineSeries({
+      // Add price series using line type
+      const lineSeries = addSeriesWithType(chart, 'Line', {
         color: colors.primary,
         lineWidth: 2,
         crosshairMarkerVisible: true,
         lastValueVisible: true,
         priceLineVisible: false,
       });
+      
       lineSeries.setData(formattedPriceData);
       
       // Add volume series if available
       if (hasVolume && formattedVolumeData.length > 0) {
-        const volumeSeries = chart.addHistogramSeries({
+        const volumeSeries = addSeriesWithType(chart, 'Histogram', {
           color: colors.accent,
           priceFormat: {
             type: 'volume',
