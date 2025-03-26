@@ -109,8 +109,8 @@ const formatTimestamp = (timestamp: string | number): Time => {
   return Math.floor(date.getTime() / 1000) as Time;
 };
 
-// Fixed addSeriesWithType function to use the correct API
+// Fixed addSeriesWithType function to use the correct API and types
 export const addSeriesWithType = (chart: IChartApi, type: SeriesType, options: any = {}) => {
-  // The `addSeries` method is the correct API method to use
-  return chart.addSeries(type, options);
+  // The `addSeries` method requires a properly typed series type
+  return chart.addSeries(type as keyof SeriesOptionsMap, options);
 };
