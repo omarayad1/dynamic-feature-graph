@@ -9,11 +9,13 @@ import {
   SeriesOptionsMap,
   IChartApi,
   ISeriesApi,
-  Time
+  Time,
+  LayoutOptions,
+  DeepPartial
 } from 'lightweight-charts';
 
-export const createLightweightChart = (container: HTMLElement, options: Partial<ChartOptions> = {}) => {
-  const defaultOptions: Partial<ChartOptions> = {
+export const createLightweightChart = (container: HTMLElement, options: DeepPartial<ChartOptions> = {}) => {
+  const defaultOptions: DeepPartial<ChartOptions> = {
     layout: {
       background: { type: ColorType.Solid, color: 'transparent' },
       textColor: 'var(--muted-foreground)',
@@ -32,6 +34,7 @@ export const createLightweightChart = (container: HTMLElement, options: Partial<
         style: LineStyle.Dashed,
         visible: true,
         labelVisible: false,
+        labelBackgroundColor: 'rgba(120, 120, 120, 0.2)'
       },
       horzLine: {
         width: 1,
@@ -39,6 +42,7 @@ export const createLightweightChart = (container: HTMLElement, options: Partial<
         style: LineStyle.Dashed,
         visible: true,
         labelVisible: false,
+        labelBackgroundColor: 'rgba(120, 120, 120, 0.2)'
       },
     },
     timeScale: {
@@ -79,25 +83,46 @@ export const getChartColors = () => {
   };
 };
 
+// Format volume data to be compatible with the Time type
 export const formatVolumeData = (data: any[]) => {
   return data.map(item => ({
-    time: typeof item.timestamp === 'string' 
-      ? new Date(item.timestamp).getTime() / 1000 
-      : item.timestamp / 1000,
+    time: formatTimestamp(item.timestamp),
     value: item.volume || 0,
   }));
 };
 
+// Format price data to be compatible with the Time type
 export const formatPriceData = (data: any[]) => {
   return data.map(item => ({
-    time: typeof item.timestamp === 'string' 
-      ? new Date(item.timestamp).getTime() / 1000 
-      : item.timestamp / 1000,
+    time: formatTimestamp(item.timestamp),
     value: item.value || 0,
   }));
 };
 
-export const addSeriesWithType = (chart: IChartApi, type: SeriesType, options: any = {}) => {
-  return chart.addSeries(type, options);
+// Helper function to convert timestamp to proper Time format
+const formatTimestamp = (timestamp: string | number): Time => {
+  const date = typeof timestamp === 'string' 
+    ? new Date(timestamp) 
+    : new Date(timestamp);
+  
+  // Format as UTC timestamp in seconds (Time type compatible)
+  return Math.floor(date.getTime() / 1000) as Time;
 };
 
+// Fixed addSeriesWithType function
+export const addSeriesWithType = (chart: IChartApi, type: SeriesType, options: any = {}) => {
+  switch(type) {
+    case 'Line':
+      return chart.addLineSeries(options);
+    case 'Area':
+      return chart.addAreaSeries(options);
+    case 'Bar':
+      return chart.addBarSeries(options);
+    case 'Candlestick':
+      return chart.addCandlestickSeries(options);
+    case 'Histogram':
+      return chart.addHistogramSeries(options);
+    default:
+      throw new Error(`Unsupported series type: ${type}`);
+  }
+};
