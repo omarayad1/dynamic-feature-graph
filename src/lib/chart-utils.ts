@@ -1,4 +1,3 @@
-
 import { 
   createChart, 
   ColorType, 
@@ -109,20 +108,19 @@ const formatTimestamp = (timestamp: string | number): Time => {
   return Math.floor(date.getTime() / 1000) as Time;
 };
 
-// Fixed addSeriesWithType function to properly handle type conversion
+// Fixed addSeriesWithType function that properly handles TypeScript types
 export const addSeriesWithType = (chart: IChartApi, type: SeriesType, options: any = {}) => {
-  // We need to use the correct literal type for each series type
   switch (type) {
     case 'Line':
-      return chart.addSeries('Line' as keyof SeriesOptionsMap, options);
+      return chart.addLineSeries(options);
     case 'Area':
-      return chart.addSeries('Area' as keyof SeriesOptionsMap, options);
+      return chart.addAreaSeries(options);
     case 'Bar':
-      return chart.addSeries('Bar' as keyof SeriesOptionsMap, options);
+      return chart.addBarSeries(options);
     case 'Candlestick':
-      return chart.addSeries('Candlestick' as keyof SeriesOptionsMap, options);
+      return chart.addCandlestickSeries(options);
     case 'Histogram':
-      return chart.addSeries('Histogram' as keyof SeriesOptionsMap, options);
+      return chart.addHistogramSeries(options);
     default:
       throw new Error(`Unsupported series type: ${type}`);
   }
